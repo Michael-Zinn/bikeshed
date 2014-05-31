@@ -70,9 +70,9 @@ func TestRGBtoHSL(t *testing.T) {
 func TestHSLtoRGB(t *testing.T) {
 	for _, test := range colors {
 		rgbFromCode := HSLtoRGB(test.hsl)
-		assert.Equal(t, test.rgb&hue, rgbFromCode&hue, test.desc+"\t: Hue")
-		assert.Equal(t, test.rgb&sat, rgbFromCode&sat, test.desc+"\t: Saturation")
-		assert.Equal(t, test.rgb&lum, rgbFromCode&lum, test.desc+"\t: Luminance")
-//		assert.Equal(t, test.rgb, rgbFromCode, test.desc+"\t: All")
+//		assert.Equal(t, test.rgb&hue, rgbFromCode&hue, test.desc+"\t: Hue")
+//		assert.Equal(t, test.rgb&sat, rgbFromCode&sat, test.desc+"\t: Saturation")
+//		assert.Equal(t, test.rgb&lum, rgbFromCode&lum, test.desc+"\t: Luminance")
+		assert.Equal(t, test.rgb, rgbFromCode, test.desc+"\t: All")
 	}
 }
