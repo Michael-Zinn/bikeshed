@@ -27,7 +27,7 @@ func RGBtoHSL(rgb uint32) (hsl uint32) {
 	var_Max := uint32(math.Max(float64(R), math.Max(float64(G), float64(B)))) //Max. value of RGB
 	del_Max := var_Max - var_Min                                              //Delta RGB value
 
-	L := (var_Max + var_Min) / 2
+	L := (var_Max + var_Min+1) / 2
 	//fmt.Println("LUMA: ", L)
 	var H, S uint32
 
@@ -39,83 +39,77 @@ func RGBtoHSL(rgb uint32) (hsl uint32) {
 		if L < 128 {
 			S = 255 * del_Max / (var_Max + var_Min)
 		} else {
-			S = 255 * del_Max / (511 - var_Max - var_Min)
+			S = 255 * del_Max / (510 - var_Max - var_Min)
 		}
 
-		del_R := (((var_Max - R) / 6) + (del_Max / 2)) / del_Max
-		del_G := (((var_Max - G) / 6) + (del_Max / 2)) / del_Max
-		del_B := (((var_Max - B) / 6) + (del_Max / 2)) / del_Max
+		//	fmt.Println(var_Max, del_Max)
+
+		del_R := 255 * (((var_Max - R) / 6) + (del_Max / 2)) / del_Max
+		del_G := 255 * (((var_Max - G) / 6) + (del_Max / 2)) / del_Max
+		del_B := 255 * (((var_Max - B) / 6) + (del_Max / 2)) / del_Max
 
 		if R == var_Max {
 			H = del_B - del_G
 		} else if G == var_Max {
-			H = (256 * 1 / 3) + del_R - del_B
+			H = (255 * 1 / 3) + del_R - del_B
 		} else if B == var_Max {
-			H = (256 * 2 / 3) + del_G - del_R
-		}
-		if H < 0 {
-			H += 256
-		}
-		if H > 1 {
-			H -= 256
+			H = (255 * 2 / 3) + del_G - del_R
 		}
 	}
 	hsl = (rgb & 0xFF000000) | ((H & 0xFF) << 16) | ((S & 0xFF) << 8) | (L & 0xFF)
-	//fmt.Println("RGB: ",rgb, toHex(rgb),"\t to HSL: ", hsl, toHex(hsl))
 	return
 }
 
-func hueToRGB(v1, v2, vH uint32) uint32 { //Function Hue_2_RGB
+func HSLtoRGB(hsl uint32) uint32 {
 
-	if vH < 0 {
-		vH += 256
-	}
-	if vH > 1 {
-		vH -= 256
+	h := float64((hsl>>16)&0xFF) / 255.0
+	s := float64((hsl>>8)&0xFF) / 255.0
+	l := float64(hsl&0xFF) / 255.0
+
+	//fmt.Println("HSL", h, s, l)
+
+	var r, g, b float64
+
+	if s == 0 {
+		ll := hsl & 0xFF
+		return 0xFF000000 | (ll << 16) | (ll << 8) | ll // achromatic
+	} else {
+		var q float64
+		if l < 0.5 {
+			q = l * (1.0 + s)
+		} else {
+			q = l + s - l*s
+		}
+		p := 2.0*l - q
+		//fmt.Println("qp", q, p)
+
+		r = hue2rgb(p, q, h+1.0/3.0)
+		g = hue2rgb(p, q, h)
+		b = hue2rgb(p, q, h-1.0/3.0)
+	//	fmt.Println("RGB", r, g, b)
 	}
 
-	if (6 * vH) < 255 {
-		return (v1 + (v2-v1)*6*vH)
-	}
-	if (2 * vH) < 255 {
-		return (v2)
-	}
-	if (3 * vH) < 511 {
-		return (v1 + (v2-v1)*((511/3)-vH)*6)
-	}
-	return (v1)
+	return 0xFF000000 | (uint32(r*255) << 16) | (uint32(g*255) << 8) | uint32(b*255)
 }
 
-func HSLtoRGB(hsl uint32) (rgb uint32) {
-
-	H := (hsl >> 16) & 0xFF
-	S := (hsl >> 8) & 0xFF
-	L := hsl & 0xFF
-
-	if S == 0 { //HSL from 0 to 1
-		return 0xFF000000 | (L << 16) | (L << 8) | L
-	} else {
-		var var_2 uint32
-
-		if L < 128 {
-			var_2 = L * (1 + S)
-		} else {
-			var_2 = (L + S) - (S * L)
-		}
-
-		var_1 := 2*L - var_2
-
-		R := hueToRGB(var_1, var_2, H+(1/3))
-		G := hueToRGB(var_1, var_2, H)
-		B := hueToRGB(var_1, var_2, H-(1/3))
-
-		rgb = 0xFF000000 | (R << 16) | (G << 8) | B
-		//fmt.Println("HSLtoRGB: hsl: ",toHex(hsl),"\trgb: ",toHex(rgb))
-		return
+func hue2rgb(p, q, t float64) float64 {
+	if t < 0 {
+		t += 1.0
+	}
+	if t > 1 {
+		t -= 1.0
 	}
 
-	// unreachable?
-	return 0xDEADBEEF
+	if t < 1.0/6.0 {
+		return p + (q-p)*6.0*t
+	}
+	if t < 1.0/2.0 {
+		return q
+	}
+	if t < 2.0/3.0 {
+		return p + (q-p)*(2.0/3.0-t)*6.0
+	}
+	return p
 }
 
 // Uses ImageMagick to generate some basic histograms:
