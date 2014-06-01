@@ -21,3 +21,12 @@ _testmain.go
 
 *.exe
 *.test
+
+# Editor backup files
+*~
+
+# To simply test images in this directory
+*.png
+*.jpg
+*.jpeg
+
