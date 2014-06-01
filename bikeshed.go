@@ -27,7 +27,7 @@ func RGBtoHSL(rgb uint32) (hsl uint32) {
 	var_Max := uint32(math.Max(float64(R), math.Max(float64(G), float64(B)))) //Max. value of RGB
 	del_Max := var_Max - var_Min                                              //Delta RGB value
 
-	L := (var_Max + var_Min+1) / 2
+	L := (var_Max + var_Min + 1) / 2
 	//fmt.Println("LUMA: ", L)
 	var H, S uint32
 
@@ -37,9 +37,9 @@ func RGBtoHSL(rgb uint32) (hsl uint32) {
 		S = 0
 	} else { //Chromatic data...
 		if L < 128 {
-			S = 255 * del_Max / (var_Max + var_Min)
+			S = (255 * del_Max / (var_Max + var_Min)) * (256 - (L-128)*(L-128)/64) / 256
 		} else {
-			S = 255 * del_Max / (510 - var_Max - var_Min)
+			S = (255 * del_Max / (510 - var_Max - var_Min)) * (256 - (L-128)*(L-128)*(L-128)*(L-128)/1048576) / 256
 		}
 
 		//	fmt.Println(var_Max, del_Max)
@@ -86,7 +86,7 @@ func HSLtoRGB(hsl uint32) uint32 {
 		r = hue2rgb(p, q, h+1.0/3.0)
 		g = hue2rgb(p, q, h)
 		b = hue2rgb(p, q, h-1.0/3.0)
-	//	fmt.Println("RGB", r, g, b)
+		//	fmt.Println("RGB", r, g, b)
 	}
 
 	return 0xFF000000 | (uint32(r*255) << 16) | (uint32(g*255) << 8) | uint32(b*255)
@@ -185,7 +185,7 @@ func histograms(imageFilePath string) (saturationSums, pixelCounts [256]uint32, 
 			pixelCounts[h] += (uint32)(count)
 			pixelCount += (uint32)(count)
 		}
-		//fmt.Println(saturationSums)
+		fmt.Println(saturationSums)
 		averageSaturation /= pixelCount
 		averageBrightness /= pixelCount
 
@@ -216,6 +216,8 @@ func placeholderColor(imageFilePath string) (color uint32) {
 	for _, saturationSum := range saturationSums[:WINDOWSIZE] {
 		windowSaturationSum += saturationSum
 	}
+	fmt.Println("Initial Saturation Sum:", windowSaturationSum)
+
 	var windowPixelCount uint32 = 0
 	for _, pixelCount := range pixelCounts[:WINDOWSIZE] {
 		//fmt.Println("Pixel counts: Hue: ",i,"\t Pixels for that hue: ", pixelCount)
@@ -240,6 +242,7 @@ func placeholderColor(imageFilePath string) (color uint32) {
 			maxWindowSaturationSum = windowSaturationSum
 			maxWindowLeftPos = leftWindowPos + 1
 			maxWindowPixelCount = windowPixelCount
+			fmt.Println("Found better window:", maxWindowLeftPos, maxWindowPixelCount)
 		}
 	}
 	// maxSumLeftWindowPos should now point to the max saturation window
@@ -250,21 +253,23 @@ func placeholderColor(imageFilePath string) (color uint32) {
 	var maxWindowConfusingHue uint32 = 0
 	for windowPos := uint32(0); windowPos < WINDOWSIZE; windowPos++ {
 		maxWindowConfusingHue += windowPos * saturationSums[(windowPos+maxWindowLeftPos)&255]
+		//		fmt.Println(maxWindowConfusingHue)
 	}
-	maxWindowAverageHue := (maxWindowConfusingHue/maxWindowPixelCount + maxWindowLeftPos) & 255
+	fmt.Println("confusing hue", maxWindowConfusingHue)
+	maxWindowAverageHue := (uint32(float64(maxWindowConfusingHue)/float64(maxWindowSaturationSum)) + maxWindowLeftPos) & 255
 
 	// Convert back to ARGB for output
-	//fmt.Println("LeftWindow: ", maxWindowLeftPos)
-	//fmt.Println("Hue: ", maxWindowAverageHue)
-	//fmt.Println("Saturation: ", averageSaturation)
-	//fmt.Println("Luminance: ", averageBrightness)
-	//fmt.Println("PixelCount: ", maxWindowPixelCount)
+	fmt.Println("LeftWindow: ", maxWindowLeftPos)
+	fmt.Println("Hue: ", maxWindowAverageHue)
+	fmt.Println("Saturation: ", averageSaturation)
+	fmt.Println("Luminance: ", averageBrightness)
+	fmt.Println("PixelCount: ", maxWindowPixelCount)
 
 	//fmt.Println(maxWindowAverageHue, averageBrightness, averageSaturation)
-	//	//fmt.Println(saturationSums)
+	fmt.Println(saturationSums)
 
-	placeholderColor := (maxWindowAverageHue << 16) | (averageSaturation << 8) | averageBrightness
-	fmt.Println("The HSL COLOR IS: ", 360*(placeholderColor>>16)/256, 100*((placeholderColor>>8)&0xFF)/256, 100*(placeholderColor&0xFF)/256)
+	//placeholderColor := (maxWindowAverageHue << 16) | (averageSaturation << 8) | averageBrightness
+	//	fmt.Println("The HSL COLOR IS: ", 360*(placeholderColor>>16)/256, 100*((placeholderColor>>8)&0xFF)/256, 100*(placeholderColor&0xFF)/256)
 	return HSLtoRGB(0xFF000000 | (maxWindowAverageHue << 16) | (averageSaturation << 8) | averageBrightness)
 }
 
@@ -278,6 +283,4 @@ func main() {
 	//	bytes := []byte{byte(color>>16&0xFF),byte(color>>8&0xFF),byte(color&0xFF)}
 	////fmt.Print(hex.EncodeToString(bytes))
 	fmt.Println("THE PLACEHOLDER COLOR: ", toHex(color))
-
-	fmt.Println("hsl test: f170a9", RGBtoHSL(0xf170a9))
 }

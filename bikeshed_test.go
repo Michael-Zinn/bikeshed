@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/stretchr/testify/assert"
-	"testing"
 	"math"
+	"testing"
 )
 
 var colors = []struct {
@@ -15,6 +15,11 @@ var colors = []struct {
 		desc: "black",
 		rgb:  0xFF000000,
 		hsl:  0xFF000000,
+	},
+	{
+		desc: "dark green",
+		rgb:  0xFF001000,
+		hsl:  0xFF551005,
 	},
 	{
 		desc: "red",
@@ -63,11 +68,11 @@ const maxError uint32 = 4
 func TestRGBtoHSL(t *testing.T) {
 	for _, test := range colors {
 		hslFromCode := RGBtoHSL(test.rgb)
-//		assert.Equal(t, test.hsl&hue, hslFromCode&hue, test.desc+"\t: Hue")
-	//	assert.Equal(t, test.hsl&sat, hslFromCode&sat, test.desc+"\t: Saturation")
+		//		assert.Equal(t, test.hsl&hue, hslFromCode&hue, test.desc+"\t: Hue")
+		//	assert.Equal(t, test.hsl&sat, hslFromCode&sat, test.desc+"\t: Saturation")
 		//assert.Equal(t, test.hsl&lum, hslFromCode&lum, test.desc+"\t: Luminance")
 		//		assert.Equal(t, test.hsl, hslFromCode, test.desc+"\t: All")
-		if(channelDiff(test.hsl,hslFromCode) < maxError) {
+		if channelDiff(test.hsl, hslFromCode) < maxError {
 			t.Log(test.desc, "works")
 		} else {
 			//t.Error("Not good enough:",test.hsl,hslFromCode)
@@ -80,10 +85,10 @@ func TestRGBtoHSL(t *testing.T) {
 func TestHSLtoRGB(t *testing.T) {
 	for _, test := range colors {
 		rgbFromCode := HSLtoRGB(test.hsl)
-		
-//		assert.Equal(t, test.rgb, rgbFromCode, test.desc+"\t: All")
-		
-		if(channelDiff(test.rgb,rgbFromCode) < maxError) {
+
+		//		assert.Equal(t, test.rgb, rgbFromCode, test.desc+"\t: All")
+
+		if channelDiff(test.rgb, rgbFromCode) < maxError {
 			t.Log(test.desc, "works")
 		} else {
 			//t.Error("Not good enough:",test.rgb,rgbFromCode)
@@ -92,12 +97,12 @@ func TestHSLtoRGB(t *testing.T) {
 	}
 }
 
-func channelDiff(a,b uint32) uint32 {
+func channelDiff(a, b uint32) uint32 {
 	var diff float64 = 0
 
-	diff += math.Abs(float64(a & 0xFF) - float64(b & 0xFF))
-	diff += math.Abs(float64((a>>8) & 0xFF) - float64((b>>8) & 0xFF))
-	diff += math.Abs(float64((a>>16) & 0xFF) - float64((b>>16) & 0xFF))
+	diff += math.Abs(float64(a&0xFF) - float64(b&0xFF))
+	diff += math.Abs(float64((a>>8)&0xFF) - float64((b>>8)&0xFF))
+	diff += math.Abs(float64((a>>16)&0xFF) - float64((b>>16)&0xFF))
 
 	return uint32(diff)
 }
