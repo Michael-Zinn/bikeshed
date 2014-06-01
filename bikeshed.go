@@ -125,7 +125,7 @@ func histograms(imageFilePath string) (saturationSums, pixelCounts [256]uint32, 
 
 	//output, e := exec.Command("convert", "o1.jpg", "-scale", "100x100", "-gravity", "center", "-crop", "50%", "-dither", "None", "-remap", "color_map.gif", "-format", "%c", "histogram:info:").Output()
 
-	output, e := exec.Command("convert", imageFilePath /* "-scale", "1000x1000", */, "-gravity", "center" /*"-crop", "50%",*/, "-dither", "None", "-format", "%c", "histogram:info:").Output()
+	output, e := exec.Command("convert", imageFilePath, "-scale", "128x128", "-gravity", "center" /*"-crop", "50%",*/, "-dither", "None", "-format", "%c", "histogram:info:").Output()
 
 	//fmt.Println(string(output))
 
@@ -185,7 +185,7 @@ func histograms(imageFilePath string) (saturationSums, pixelCounts [256]uint32, 
 			pixelCounts[h] += (uint32)(count)
 			pixelCount += (uint32)(count)
 		}
-		fmt.Println(saturationSums)
+		//		fmt.Println(saturationSums)
 		averageSaturation /= pixelCount
 		averageBrightness /= pixelCount
 
@@ -216,7 +216,7 @@ func placeholderColor(imageFilePath string) (color uint32) {
 	for _, saturationSum := range saturationSums[:WINDOWSIZE] {
 		windowSaturationSum += saturationSum
 	}
-	fmt.Println("Initial Saturation Sum:", windowSaturationSum)
+	//	fmt.Println("Initial Saturation Sum:", windowSaturationSum)
 
 	var windowPixelCount uint32 = 0
 	for _, pixelCount := range pixelCounts[:WINDOWSIZE] {
@@ -227,7 +227,7 @@ func placeholderColor(imageFilePath string) (color uint32) {
 	// set current window as initial max window
 	maxWindowSaturationSum := windowSaturationSum
 	maxWindowLeftPos := uint32(0)
-	maxWindowPixelCount := windowPixelCount
+//	maxWindowPixelCount := windowPixelCount
 
 	// slide over the rest of the histogram to find the max saturation window
 	for leftWindowPos := uint32(0); leftWindowPos < 256; leftWindowPos++ {
@@ -241,8 +241,8 @@ func placeholderColor(imageFilePath string) (color uint32) {
 		if windowSaturationSum > maxWindowSaturationSum {
 			maxWindowSaturationSum = windowSaturationSum
 			maxWindowLeftPos = leftWindowPos + 1
-			maxWindowPixelCount = windowPixelCount
-			fmt.Println("Found better window:", maxWindowLeftPos, maxWindowPixelCount)
+//			maxWindowPixelCount = windowPixelCount
+			//			fmt.Println("Found better window:", maxWindowLeftPos, maxWindowPixelCount)
 		}
 	}
 	// maxSumLeftWindowPos should now point to the max saturation window
@@ -255,18 +255,18 @@ func placeholderColor(imageFilePath string) (color uint32) {
 		maxWindowConfusingHue += windowPos * saturationSums[(windowPos+maxWindowLeftPos)&255]
 		//		fmt.Println(maxWindowConfusingHue)
 	}
-	fmt.Println("confusing hue", maxWindowConfusingHue)
+	//	fmt.Println("confusing hue", maxWindowConfusingHue)
 	maxWindowAverageHue := (uint32(float64(maxWindowConfusingHue)/float64(maxWindowSaturationSum)) + maxWindowLeftPos) & 255
 
 	// Convert back to ARGB for output
-	fmt.Println("LeftWindow: ", maxWindowLeftPos)
-	fmt.Println("Hue: ", maxWindowAverageHue)
-	fmt.Println("Saturation: ", averageSaturation)
-	fmt.Println("Luminance: ", averageBrightness)
-	fmt.Println("PixelCount: ", maxWindowPixelCount)
+	//	fmt.Println("LeftWindow: ", maxWindowLeftPos)
+	//	fmt.Println("Hue: ", maxWindowAverageHue)
+	//	fmt.Println("Saturation: ", averageSaturation)
+	//	fmt.Println("Luminance: ", averageBrightness)
+	//	fmt.Println("PixelCount: ", maxWindowPixelCount)
 
 	//fmt.Println(maxWindowAverageHue, averageBrightness, averageSaturation)
-	fmt.Println(saturationSums)
+	//	fmt.Println(saturationSums)
 
 	//placeholderColor := (maxWindowAverageHue << 16) | (averageSaturation << 8) | averageBrightness
 	//	fmt.Println("The HSL COLOR IS: ", 360*(placeholderColor>>16)/256, 100*((placeholderColor>>8)&0xFF)/256, 100*(placeholderColor&0xFF)/256)
@@ -282,5 +282,5 @@ func main() {
 	color := placeholderColor(os.Args[1])
 	//	bytes := []byte{byte(color>>16&0xFF),byte(color>>8&0xFF),byte(color&0xFF)}
 	////fmt.Print(hex.EncodeToString(bytes))
-	fmt.Println("THE PLACEHOLDER COLOR: ", toHex(color))
+	fmt.Print(toHex(color))
 }

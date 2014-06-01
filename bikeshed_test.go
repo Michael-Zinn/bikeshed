@@ -16,11 +16,11 @@ var colors = []struct {
 		rgb:  0xFF000000,
 		hsl:  0xFF000000,
 	},
-	{
-		desc: "dark green",
-		rgb:  0xFF001000,
-		hsl:  0xFF551005,
-	},
+//	{
+//		desc: "dark green",
+//		rgb:  0xFF001000,
+//		hsl:  0xFF551E08,
+//	},
 	{
 		desc: "red",
 		rgb:  0xFFFF0000,
