@@ -14,5 +14,3 @@ bikeshed imagefilename
 ## Output:
 
 RGB as hex without alpha. E.g. c0ffee
-
-![Bikeshed Examples](https://dl.dropboxusercontent.com/u/2098438/Permanent/bikeshed/img/CoverPlaceholder.png ":)")
